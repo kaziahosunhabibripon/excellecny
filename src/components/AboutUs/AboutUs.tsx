@@ -12,6 +12,7 @@ import "aos/dist/aos.css";
 import { ArrowRight } from "react-feather";
 import { CountUp } from "countup.js";
 import { useLocale, useTranslations } from "next-intl";
+import { toArabicNumerals } from "@/helpers/ui/Arabic";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -128,12 +129,10 @@ const AboutUs = () => {
     },
   ];
 
-  // AOS
   useEffect(() => {
     AOS.init({ offset: 120, duration: 2000, easing: "ease-out" });
   }, []);
 
-  // GSAP CTA Button Animation
   useEffect(() => {
     if (!buttonRef.current) return;
 
@@ -158,7 +157,6 @@ const AboutUs = () => {
     ScrollTrigger.refresh();
   }, []);
 
-  // GSAP CountUp Animations
   useEffect(() => {
     const timeout = setTimeout(() => {
       countRefs.current.forEach((el, index) => {
@@ -185,19 +183,20 @@ const AboutUs = () => {
                 if (countUpEl && !countUpEl.dataset.started) {
                   const end = parseFloat(countUpEl.dataset.end ?? "0");
                   const suffix = countUpEl.dataset.suffix || "";
-                  const format = countUpEl.dataset.format;
 
                   const countUp = new CountUp(countUpEl, end, {
                     duration: 2,
                     suffix,
+                    formattingFn: (n) => {
+                      const formatted = `${Math.floor(n)}${suffix}`;
+                      return locale === "ar"
+                        ? toArabicNumerals(formatted)
+                        : formatted;
+                    },
                   });
 
                   if (!countUp.error) {
-                    countUp.start(() => {
-                      if (format) {
-                        countUpEl.innerText = format;
-                      }
-                    });
+                    countUp.start();
                     countUpEl.dataset.started = "true";
                   }
                 }
@@ -211,9 +210,8 @@ const AboutUs = () => {
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, []);
+  }, [locale]);
 
-  // Story Section Animation
   useEffect(() => {
     sectionsRef.current.forEach((section, i) => {
       if (!section) return;
@@ -420,8 +418,9 @@ const AboutUs = () => {
                     const number = numberMatch ? parseInt(numberMatch[1]) : 0;
                     const suffix = numberMatch?.[2] || "";
                     const display = stat.display || `${number}${suffix}`;
-
                     const label = locale === "ar" ? stat.labelAr : stat.labelEn;
+                    const formatValue =
+                      locale === "ar" ? toArabicNumerals(display) : display;
 
                     return (
                       <div
@@ -436,9 +435,8 @@ const AboutUs = () => {
                           }`}
                           data-end={number}
                           data-suffix={suffix}
-                          data-format={display}
                         >
-                          0{suffix}
+                          {formatValue}
                         </div>
                         <div
                           className={`text-md font-normal mt-1 ${
