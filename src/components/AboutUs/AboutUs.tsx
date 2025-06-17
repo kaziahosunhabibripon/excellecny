@@ -19,46 +19,128 @@ gsap.registerPlugin(ScrollTrigger);
 const storyData = [
   {
     en: [
-      /* ... unchanged story items ... */
+      {
+        image: "/assets/banner-1.jpg",
+        alt: "FoodieDelight story part 1",
+        paragraphs: [
+          "FoodieDelight was born from a simple idea: everyone deserves access to delicious, restaurant-quality meals in the comfort of their own home.",
+          "Our journey began in 2018 when our founder, Emily Chen, noticed a gap in the food delivery market for truly exceptional culinary experiences.",
+        ],
+      },
+      {
+        image: "/assets/banner-2.jpg",
+        alt: "FoodieDelight story part 2",
+        paragraphs: [
+          "What started as a small operation connecting local chefs with food enthusiasts has grown into a platform that celebrates diversity in cuisine.",
+          "We support local restaurants while providing unparalleled convenience to our customers.",
+        ],
+      },
     ],
     ar: [
-      /* ... unchanged story items ... */
+      {
+        image: "/assets/banner-1.jpg",
+        alt: "قصة فودي ديلايت - الجزء الأول",
+        paragraphs: [
+          "نشأت فودي ديلايت من فكرة بسيطة: يستحق الجميع تناول وجبات لذيذة بجودة المطاعم في راحة منازلهم.",
+          "بدأت رحلتنا في عام 2018 عندما لاحظت مؤسستنا، إميلي تشين، فجوة في سوق توصيل الطعام فيما يتعلق بالتجارب الطهوية المتميزة.",
+        ],
+      },
+      {
+        image: "/assets/banner-2.jpg",
+        alt: "قصة فودي ديلايت - الجزء الثاني",
+        paragraphs: [
+          "ما بدأ كمشروع صغير يربط الطهاة المحليين بعشاق الطعام تحول إلى منصة تحتفل بتنوع المأكولات.",
+          "ندعم المطاعم المحلية مع توفير راحة لا مثيل لها لعملائنا.",
+        ],
+      },
     ],
   },
 ];
-
 const qualityData = {
   en: [
-    /* ... unchanged quality items ... */
+    {
+      icon: "🍽️",
+      label: "Quality",
+      description:
+        "We're committed to delivering the highest quality meals and service.",
+    },
+    {
+      icon: "🤝",
+      label: "Community",
+      description:
+        "We support local restaurants and foster a sense of community.",
+    },
+    {
+      icon: "💡",
+      label: "Innovation",
+      description:
+        "We continuously innovate to improve the food delivery experience.",
+    },
   ],
   ar: [
-    /* ... unchanged quality items ... */
+    {
+      icon: "🍽️",
+      label: "الجودة",
+      description: "نحن ملتزمون بتقديم أعلى جودة في الوجبات والخدمة.",
+    },
+    {
+      icon: "🤝",
+      label: "المجتمع",
+      description: "ندعم المطاعم المحلية ونشجع على روح المجتمع.",
+    },
+    {
+      icon: "💡",
+      label: "الابتكار",
+      description: "نحن نبتكر باستمرار لتحسين تجربة توصيل الطعام.",
+    },
   ],
 };
 
 const AboutUs = () => {
   const locale = useLocale();
   const lang = locale === "ar" ? "ar" : "en";
-  const rtl = locale === "ar";
   const t = useTranslations();
   const buttonRef = useRef(null);
   const countRefs = useRef<Array<HTMLDivElement | null>>([]);
   const sectionsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   const stats = [
-    /* ... unchanged stats array ... */
+    {
+      value: "28+",
+      labelEn: "Growing Years",
+      labelAr: "سنوات النمو",
+      color: "text-[#ecbf4c]",
+    },
+    {
+      value: "354+",
+      labelEn: "Type of Products",
+      labelAr: "أنواع المنتجات",
+    },
+    {
+      value: "32+",
+      labelEn: "Sales Outlets",
+      labelAr: "نقاط البيع",
+    },
+    {
+      value: "200000+",
+      labelEn: "Annual Sales",
+      labelAr: "المبيعات السنوية",
+      display: "2L+",
+    },
   ];
 
+  // AOS
   useEffect(() => {
     AOS.init({ offset: 120, duration: 2000, easing: "ease-out" });
   }, []);
 
+  // GSAP CTA Button Animation
   useEffect(() => {
     if (!buttonRef.current) return;
 
     gsap.fromTo(
       buttonRef.current,
-      { x: rtl ? "100%" : "-100%", opacity: 0 },
+      { x: "-100%", opacity: 0 },
       {
         x: "0%",
         opacity: 1,
@@ -75,8 +157,9 @@ const AboutUs = () => {
     );
 
     ScrollTrigger.refresh();
-  }, [rtl]);
+  }, []);
 
+  // GSAP CountUp Animations
   useEffect(() => {
     const timeout = setTimeout(() => {
       countRefs.current.forEach((el, index) => {
@@ -97,22 +180,32 @@ const AboutUs = () => {
               toggleActions: "play none none none",
               once: true,
               onEnter: () => {
-                const countUpEl = el.querySelector(".countup") as HTMLElement;
+                const countUpEl = el.querySelector(
+                  ".countup"
+                ) as HTMLElement | null;
                 if (countUpEl && !countUpEl.dataset.started) {
                   const end = parseFloat(countUpEl.dataset.end ?? "0");
                   const suffix = countUpEl.dataset.suffix || "";
+                  const format = countUpEl.dataset.format;
 
                   const countUp = new CountUp(countUpEl, end, {
                     duration: 2,
                     suffix,
-                    formattingFn: (n) => {
-                      const formatted = `${Math.floor(n)}${suffix}`;
-                      return rtl ? toArabicNumerals(formatted) : formatted;
+                    // Use a callback on each frame to convert digits if Arabic locale
+                    // We'll override the default formatting
+                    formattingFn: (value) => {
+                      const str = `${value}${suffix}`;
+                      return locale === "ar" ? toArabicNumerals(str) : str;
                     },
                   });
 
                   if (!countUp.error) {
-                    countUp.start();
+                    countUp.start(() => {
+                      if (format) {
+                        countUpEl.innerText =
+                          locale === "ar" ? toArabicNumerals(format) : format;
+                      }
+                    });
                     countUpEl.dataset.started = "true";
                   }
                 }
@@ -126,8 +219,9 @@ const AboutUs = () => {
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [locale, rtl]);
+  }, [locale]);
 
+  // Story Section Animation
   useEffect(() => {
     sectionsRef.current.forEach((section, i) => {
       if (!section) return;
@@ -135,8 +229,8 @@ const AboutUs = () => {
       const content = section.querySelector(".content");
       if (!image || !content) return;
 
-      const fromXImage = i % 2 === 0 ? (rtl ? 100 : -100) : rtl ? -100 : 100;
-      const fromXContent = i % 2 === 0 ? (rtl ? -100 : 100) : rtl ? 100 : -100;
+      const fromXImage = i % 2 === 0 ? -100 : 100;
+      const fromXContent = i % 2 === 0 ? 100 : -100;
 
       gsap.fromTo(
         image,
@@ -173,10 +267,13 @@ const AboutUs = () => {
     });
 
     ScrollTrigger.refresh();
-  }, [rtl]);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50" dir={rtl ? "rtl" : "ltr"}>
+    <div
+      className="min-h-screen bg-gray-50 overflow-x-hidden"
+      dir={locale === "ar" ? "rtl" : "ltr"}
+    >
       {/* Header */}
       <CommonHeader
         title={t("aboutus.title")}
@@ -197,7 +294,7 @@ const AboutUs = () => {
               ref={(el) => {
                 sectionsRef.current[index] = el;
               }}
-              className={`flex flex-col md:flex-row items-center gap-8 my-12 ${
+              className={`flex flex-col md:flex-row items-center gap-8 my-12  overflow-x-hidden ${
                 index % 2 !== 0 ? "md:flex-row-reverse" : ""
               }`}
             >
@@ -292,7 +389,7 @@ const AboutUs = () => {
             {t("aboutus.testimonials")}
           </h2>
           <blockquote className="text-xl text-gray-600 italic mb-4">
-            &quot;{t("aboutus.quoto")}&quot;
+            &quot;{t("aboutus.quoto")}!&quot;
           </blockquote>
           <p className="text-gray-800 font-semibold">-{t("aboutus.writer")}</p>
         </div>
@@ -321,7 +418,7 @@ const AboutUs = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Count Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center gap-8">
@@ -333,11 +430,13 @@ const AboutUs = () => {
                       stat.value.match(/^(\d+)([a-zA-Z+]+)?$/);
                     const number = numberMatch ? parseInt(numberMatch[1]) : 0;
                     const suffix = numberMatch?.[2] || "";
-                    const display = stat.display || `${number}${suffix}`;
-                    const label = rtl ? stat.labelAr : stat.labelEn;
-                    const formatValue = rtl
-                      ? toArabicNumerals(display)
-                      : display;
+
+                    const rawDisplay = stat.display || `${number}${suffix}`;
+                    const display =
+                      locale === "ar"
+                        ? toArabicNumerals(rawDisplay)
+                        : rawDisplay;
+                    const label = locale === "ar" ? stat.labelAr : stat.labelEn;
 
                     return (
                       <div
@@ -352,9 +451,13 @@ const AboutUs = () => {
                           }`}
                           data-end={number}
                           data-suffix={suffix}
+                          data-format={display}
                         >
-                          {formatValue}
+                          {locale === "ar"
+                            ? toArabicNumerals(`0${suffix}`)
+                            : `0${suffix}`}
                         </div>
+
                         <div
                           className={`text-md font-normal mt-1 ${
                             stat.color || "text-gray-500"
